@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.dump-simpl": "haskell",
+    "cstdio": "c",
+    "stdlib.h": "c"
+  }
+}
