@@ -14,15 +14,11 @@ clean:
 distclean:
 	@rm -f -- *.output
 
-%a.output: %a %.input
-	@./$< +RTS -N8 < $*.input > $@
+%a.output: %a.hs %.input
+	@runhaskell $< < $*.input > $@
 
-%b.output: %b %.input
-	@./$< +RTS -N8 < $*.input > $@
-
-%:: %.hs
-	@ghc $(HFLAGS) -o $@ $^
-	@rm -f -- $*.hi $*.o
+%b.output: %b.hs %.input
+	@runhaskell $< < $*.input > $@
 
 .PRECIOUS: %
 .PHONY: all clean distclean
