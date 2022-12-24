@@ -35,6 +35,9 @@ type Parser = Parsec String ()
 parse :: Parser a -> String -> Either ParseError a
 parse p = Parsec.parse p ""
 
+parse' :: Parser a -> String -> a
+parse' p = either (error . show) id . (parse p)
+
 parseList :: Parser a -> [String] -> [a]
 parseList p = either (error . show) id . mapM (parse p)
 
