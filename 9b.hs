@@ -14,24 +14,28 @@ origin :: Point
 origin = (0,0)
 
 f :: [Direction] -> Int
-f directions = length $ execState (advance directions) S.empty
+f directions = length $ S.toList $ execState (advance directions) S.empty
 
-advance :: [Direction] -> State (S.Set Point) (Point, Point)
-advance = advance' (origin, origin)
+advance :: [Direction] -> State (S.Set Point) [Point]
+advance = advance' (take 10 $ repeat (0,0))
     where
-        advance' (head, tail) (front:rest) = do 
-            modify (S.insert tail) 
-            advance' (moveAndFollow front (head, tail)) rest
-        advance' (head, tail) [] = do
-            modify (S.insert tail)
-            pure (head, tail)
+        advance' knots (front:rest) = do 
+            modify (S.insert (last knots)) 
+            advance' (moveAndFollow front knots) rest
+        advance' knots [] = do
+            modify (S.insert (last knots))
+            pure knots
 
-moveAndFollow :: Direction -> (Point, Point) -> (Point, Point)
-moveAndFollow direction (head, tail) = (newLocation, tail + (follow (tail - newLocation)))
+moveAndFollow :: Direction -> [Point] -> [Point]
+moveAndFollow direction (head: knots) = reverse $ foldl' (\kn@(fol:acc) p -> p + (follow (p - fol)):kn) [newLocation] knots
     where 
         newLocation = head + (dir direction)
 
 follow :: Point -> Point
+follow (-2, 2) = (1, -1)
+follow (-2, -2) = (1, 1)
+follow (2, -2) = (-1, 1)
+follow (2,2) = (-1, -1)
 follow (-2, y) = (1, y * (-1))
 follow (2, y) = (-1, y * (-1))
 follow (x, -2) = (x * (-1), 1)

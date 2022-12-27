@@ -53,3 +53,4 @@ p = do
         char ' '
         amount <- integer
         pure $ replicate amount dir
+
