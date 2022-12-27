@@ -45,6 +45,7 @@ modifyFS (OutPut fileOrFolder) zipper = (fsNewFile fileOrFolder <$> zipper)
 
 (-:) :: t1 -> (t1 -> t2) -> t2
 x -: f = f x
+
 getTreeFromZipper :: FSZipper -> FSItem
 getTreeFromZipper = fst . goToTop
 

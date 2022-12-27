@@ -2,13 +2,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module AOC (module Prelude, module AOC, module Control.Monad.State, module Data.Vector, module Text.Parsec, module Data.List, module Data.List.Split, module Data.Maybe) where
+module AOC (module Debug.Trace, module Prelude, module AOC, module Control.Monad.State, module Data.Vector, module Text.Parsec, module Data.List, module Data.List.Split, module Data.Maybe) where
 
 import Control.Monad.State
 import Data.Char
 import Data.List
 import Data.List.Split hiding (endBy, oneOf, sepBy)
 import Data.Maybe
+import Debug.Trace
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Vector (Vector, (!), (!?))
@@ -17,6 +18,9 @@ import Text.Parsec hiding (State, count, parse, uncons, Line)
 import qualified Text.Parsec as Parsec
 import Prelude hiding (interact)
 import qualified Prelude
+
+debugTrace :: Show b => b -> b
+debugTrace x = traceShow x x
 
 interact :: Show a => ([String] -> a) -> IO ()
 interact f = interact' $ f . lines
@@ -40,6 +44,10 @@ parse' p = either (error . show) id . (parse p)
 
 parseList :: Parser a -> [String] -> [a]
 parseList p = either (error . show) id . mapM (parse p)
+
+-- Takes function for a single char of the grid as a string
+parseGrid :: (String -> a) -> [String] -> [[a]]
+parseGrid c str = map (map (c . (: []))) str
 
 chari :: Char -> Parser Char
 chari c = oneOf [toLower c, toUpper c]
@@ -126,6 +134,14 @@ vtol3 = map vtol2 . vtol
 -- | The 'vtol2' function converts a 'Vector' of 'Vector's of 'Vector's of 'Vector's into a list of lists of lists of lists.
 vtol4 :: Vector (Vector (Vector (Vector a))) -> [[[[a]]]]
 vtol4 = map vtol3 . vtol
+
+instance (Num a, Num b) => Num (a, b) where
+  (x, y) + (u, v) = (x + u, y + v)
+  (x, y) * (u, v) = (x * u, y * v)
+  negate (x, y) = (negate x, negate y)
+  fromInteger x = (fromInteger x, 0)
+  abs (x, y) = (abs x, abs y)
+  signum (x, y) = (signum x, signum y)
 
 instance (Num a, Num b, Num c) => Num (a, b, c) where
   (x, y, z) + (u, v, w) = (x + u, y + v, z + w)
