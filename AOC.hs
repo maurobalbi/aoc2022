@@ -2,15 +2,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module AOC (module Debug.Trace, module Prelude, module AOC, module Control.Monad.State, module Data.Vector, module Text.Parsec, module Data.List, module Data.List.Split, module Data.Maybe) where
+module AOC (module Debug.Trace, module Prelude, module AOC, module Control.Monad.State.Strict, module Data.Vector, module Text.Parsec, module Data.List, module Data.List.Split, module Data.Maybe) where
 
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Data.Char
 import Data.List
 import Data.List.Split hiding (endBy, oneOf, sepBy)
 import Data.Maybe
 import Debug.Trace
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.Vector (Vector, (!), (!?))
 import qualified Data.Vector as V
@@ -34,6 +34,19 @@ interactg f = interact $ f . splitOn [""]
 count :: Eq a => a -> [a] -> Int
 count c = length . filter (== c)
 
+-- |The 'converge' function repeatedly applies f until there's no change
+-- in the output.  That is, it calculates \( f (f (f ... (f x))) \).
+converge :: Eq a => (a -> a) -> a -> a
+converge f x = let x' = f x in if x' == x then x else converge f x'
+
+-- |The 'applyN' function applies f n times.
+--
+-- >>> applyN 5 (+2) 3
+-- 13
+--
+applyN :: Int -> (b -> b) -> b -> b
+applyN n = foldr (.) id . replicate n
+
 type Parser = Parsec String ()
 
 parse :: Parser a -> String -> Either ParseError a
@@ -47,7 +60,7 @@ parseList p = either (error . show) id . mapM (parse p)
 
 -- Takes function for a single char of the grid as a string
 parseGrid :: (String -> a) -> [String] -> [[a]]
-parseGrid c str = map (map (c . (: []))) str
+parseGrid c = map (map (c . (: [])))
 
 chari :: Char -> Parser Char
 chari c = oneOf [toLower c, toUpper c]
