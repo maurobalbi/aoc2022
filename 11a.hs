@@ -6,34 +6,32 @@ import qualified Data.Set as S
 import qualified Data.Map.Strict as M
 import Data.Functor hiding (map)
 import Data.Foldable hiding (map)
+import Data.IntMap (toAscList)
 
 main :: IO ()
 main = interactg $ run . parseMonkeys
 
-run :: M.Map Int Monkey -> M.Map Int Monkey
-run = execState playRound
+run :: M.Map Int Monkey -> Int
+run = product .take 2 . reverse . sort . map (itemsInspected . snd) . M.toList . applyN 20 playRound
 
-playRound :: State (M.Map Int Monkey) ()
-playRound = do
-    map_ <- get
-    let list = M.toAscList map_
-    traverse_ (inspectItems . fst) list
+playRound :: M.Map Int Monkey -> M.Map Int Monkey
+playRound map' = foldl' inspectItems map' monkeyList
+    where 
+        monkeyList = map fst $ M.toAscList map'
 
-inspectItems :: Int -> State (M.Map Int Monkey) ()
-inspectItems key = do
-    monkey <- gets ( M.lookup key)
-    let items' = maybe [] items monkey
-    traverse_ (inspectAndThrowItem key) items'
+inspectItems :: M.Map Int Monkey -> Int -> M.Map Int Monkey
+inspectItems map' key = foldl' (inspectAndThrowItem key) map' currentItems
+    where
+        fromMonkey =  map' M.! key
+        currentItems = items fromMonkey
 
-
-inspectAndThrowItem :: Int -> Int -> State (M.Map Int Monkey) ()
-inspectAndThrowItem fromMonkey item = do
-    m@Monkey{..} <- gets (fromMaybe (error "No monkey") . M.lookup fromMonkey)
-    let worryLevel = increaseWorryLevel (operation) item
-    let boredLevel = worryLevel `div` 3
-    let toMonkey = throwItemToWhichMonkey m boredLevel
-    modify (M.adjust (\Monkey{..} -> Monkey{items = items ++ [boredLevel],..}) toMonkey . M.adjust (\Monkey{..} -> Monkey{items= tail items, ..}) fromMonkey)
-    pure ()
+inspectAndThrowItem :: Int -> M.Map Int Monkey -> Int -> M.Map Int Monkey
+inspectAndThrowItem fromMonkey map' item = M.adjust (\Monkey{..} -> Monkey{items=items ++ [boredLevel],..}) toMonkey $ M.adjust (\Monkey{..} -> Monkey{items= tail items, itemsInspected = itemsInspected + 1, ..}) fromMonkey map'
+    where
+        fromMonkey' = map' M.! fromMonkey
+        worryLevel = increaseWorryLevel (operation fromMonkey') item
+        toMonkey = throwItemToWhichMonkey fromMonkey' boredLevel
+        boredLevel = worryLevel `div` 3
 
 increaseWorryLevel :: Operation -> Int -> Int
 increaseWorryLevel (Multiply (Literal int)) old = old * int
@@ -42,7 +40,7 @@ increaseWorryLevel (Add (Literal int)) old = old + int
 increaseWorryLevel (Add OldVar) old = old + old
 
 throwItemToWhichMonkey :: Monkey -> Int -> Int
-throwItemToWhichMonkey Monkey{test=DivisibleBy{..},..} worryLevel = if (worryLevel `mod` condition) == 0 then ifTrue else ifFalse 
+throwItemToWhichMonkey Monkey{test=DivisibleBy{..},..} worryLevel = if (worryLevel `rem` condition) == 0 then ifTrue else ifFalse 
 
 data Monkey = Monkey {
     items :: ![Int],
