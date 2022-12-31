@@ -1,12 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RecordWildCards #-}
 
 import AOC
 import qualified Data.Set as S
 import qualified Data.Map.Strict as M
 import Data.Functor hiding (map)
-import Data.Foldable hiding (map)
-import Data.IntMap (toAscList)
 
 main :: IO ()
 main = interactg $ run . parseMonkeys
