@@ -2,12 +2,10 @@
 
 import AOC
 import qualified Data.Set as S
-import GHC.IO
+import Prelude
 
 main :: IO ()
-main = interact $ run . parseInput
-
-run x = unsafePerformIO (putStrLn (printCRT x) >> pure "") 
+main = Prelude.interact $ (++ "\n") . printCRT . parseInput . lines
 
 data Instruction = Noop | Addx Int deriving (Eq, Show)
 
